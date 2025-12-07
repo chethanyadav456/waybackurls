@@ -1,0 +1,73 @@
+#!/usr/bin/env node
+
+const { fetchWaybackUrls } = require('../index');
+const fs = require('fs');
+const path = require('path');
+
+// Parse command line arguments
+function parseArgs(args) {
+  const parsed = { domain: null, output: null };
+  
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '-d' || args[i] === '--domain') {
+      parsed.domain = args[i + 1];
+      i++;
+    } else if (args[i] === '-o' || args[i] === '--output') {
+      parsed.output = args[i + 1];
+      i++;
+    } else if (!args[i].startsWith('-') && !parsed.domain) {
+      // Support legacy usage: waybackurls example.com
+      parsed.domain = args[i];
+    }
+  }
+  
+  return parsed;
+}
+
+function showUsage() {
+  console.log(`Usage: waybackurls -d <domain> [-o <output-file>]
+
+Options:
+  -d, --domain <domain>    Domain to fetch URLs for (required)
+  -o, --output <file>      Output file (optional, defaults to stdout)
+
+Examples:
+  waybackurls -d example.com
+  waybackurls -d example.com -o results.txt
+  waybackurls example.com (legacy syntax)
+`);
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  
+  if (!args.domain) {
+    showUsage();
+    process.exit(1);
+  }
+  
+  try {
+    console.error(`Fetching URLs for ${args.domain}...`);
+    const urls = await fetchWaybackUrls(args.domain);
+    
+    if (urls.length === 0) {
+      console.error('No URLs found.');
+      process.exit(0);
+    }
+    
+    const output = urls.join('\n') + '\n';
+    
+    if (args.output) {
+      const outputPath = path.resolve(args.output);
+      fs.writeFileSync(outputPath, output, 'utf8');
+      console.error(`✓ Saved ${urls.length} URLs to ${args.output}`);
+    } else {
+      process.stdout.write(output);
+    }
+  } catch (error) {
+    console.error('Error:', error.message);
+    process.exit(1);
+  }
+}
+
+main();
