@@ -42,7 +42,7 @@ Enhancement suggestions are welcome. Include:
 
 ```bash
 # Clone your fork
-git clone https://github.com/chethanyadav456/waybackurls.git
+git clone https://github.com/yourusername/waybackurls.git
 cd waybackurls
 
 # Install dependencies
